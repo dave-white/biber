@@ -1,22 +1,27 @@
-PERLVER = 5.34.0
-PERLDIR = /usr/local/Cellar/perl/$(PERLVER)/
-LIBPERL = $(PERLDIR)lib/
-LIBPERLSVER = $(PERLDIR)lib/perl5/
-LIBPERLVER = $(LIBPERLSVER)$(PERLVER)/
-LIBSITEPERL = $(LIBPERLSVER)site_perl/
-INSTALLDIR = /usr/local/bin/
+PAR_VERBATIM = 1
+
+BINSITEPERL = /usr/bin/site_perl
+#LIBCOREPERL = $(shell for inc in $( perl -e "print qq(@INC)" ); do echo $inc; done | sed -n '/lib.*core/p')/
+#LIBSITEPERL != for inc in $$( perl -e "print qq(@INC)" ); do echo $$inc; done | sed -n '/lib.*site/p'
+#LIBCOREPERL = /usr/lib/perl5/5.34/core_perl/
+#LIBSITEPERL = /usr/lib/perl5/5.34/site_perl
+#SHARESITEPERL = /usr/share/perl5/site_perl
+
+# BIBERSRC = $(wildcard ../../lib/*.pm ../../lib/*/*.pm ../../lib/*/*/*.pm ../../lib/*/*/*/*.pm ../../lib/*/*/*.xml)
+OUTPUTNM = biber-linux_x86_64
+INSTALLDIR = /usr/local/bin
 INSTALLNM = biber
-BINSITEPERL = /usr/bin/site_perl/
 
-.DEFAULT: pack
-.PHONY: pack install
+UCPATH != perl -MUnicode::Collate -e 'print substr($$INC{"Unicode/Collate.pm"}, 0, -3)'
+MOZCAPATH != perl -MMozilla::CA -e 'print substr($$INC{"Mozilla/CA.pm"}, 0, -3)'
+PERLIOPATH != perl -MPerlIO::utf8_strict -e 'print substr($$INC{"PerlIO/utf8_strict.pm"}, 0, -3)'
+BUSISBNPATH != perl -MBusiness::ISBN -e 'print substr($$INC{"Business/ISBN.pm"}, 0, -3)'
 
-install: pack
-	cp biber-linux_x86_64 $(INSTALLDIR)$(INSTALLNM)
+all: $(OUTPUTNM)
 
-pack: $(BINSITEPERL)biber
-	PAR_VERBATIM = 1; \
-	pp \
+$(OUTPUTNM): $(BINSITEPERL)/biber
+	@echo "Running PAR::Packer pp to package $(BINSITEPERL)/biber into $(OUTPUTNM)."
+	@pp \
 		--module=deprecate \
 		--module=Biber::Input::file::bibtex \
 		--module=Biber::Input::file::biblatexml \
@@ -53,17 +58,33 @@ pack: $(BINSITEPERL)biber
 		--addfile="../../data/schemata/bcf.rng;lib/Biber/bcf.rng" \
 		--addfile="../../lib/Biber/LaTeX/recode_data.xml;lib/Biber/LaTeX/recode_data.xml" \
 		--addfile="../../data/bcf.xsl;lib/Biber/bcf.xsl" \
-		--addfile="${ucpath}/Locale;lib/Unicode/Collate/Locale" \
-		--addfile="${ucpath}/CJK;lib/Unicode/Collate/CJK" \
-		--addfile="${ucpath}/allkeys.txt;lib/Unicode/Collate/allkeys.txt" \
-		--addfile="${ucpath}/keys.txt;lib/Unicode/Collate/keys.txt" \
-		--addfile="$(LIBSITEPERL)Mozilla/CA/cacert.pem;lib/Mozilla/CA/cacert.pem" \
+		--addfile="$(UCPATH)/Locale;lib/Unicode/Collate/Locale" \
+		--addfile="$(UCPATH)/CJK;lib/Unicode/Collate/CJK" \
+		--addfile="$(UCPATH)/allkeys.txt;lib/Unicode/Collate/allkeys.txt" \
+		--addfile="$(UCPATH)/keys.txt;lib/Unicode/Collate/keys.txt" \
+		--addfile="$(MOZCAPATH)/cacert.pem;lib/Mozilla/CA/cacert.pem" \
 		--addfile="/usr/local/perl/lib/${perlv}/x86_64-linux-thread-multi/PerlIO;lib/PerlIO" \
 		--addfile="/usr/local/perl/lib/${perlv}/x86_64-linux-thread-multi/auto/PerlIO;lib/auto/PerlIO" \
-		--addfile="$(LIBSITEPERL)Business/ISBN/RangeMessage.xml;lib/Business/ISBN/RangeMessage.xml" \
+		--addfile="$(BUSISBNPATH)/RangeMessage.xml;lib/Business/ISBN/RangeMessage.xml" \
 		--cachedeps=scancache \
-		--output=biber-linux_x86_64 \
-		$(BINSITEPERL)biber
+		--output=$(OUTPUTNM) \
+		$<
 
-$(BINSITEPERL)biber:
-	sudo ../../Build install
+# ../../bin/biber: ../../Build $(BIBERSRC)
+# 	$< installdeps
+# 	sudo $< install
+
+# ../../Build: ../../Build.PL
+# 	perl $<
+
+install: $(OUTPUTNM)
+	sudo cp $(OUTPUTNM) $(INSTALLDIR)/$(INSTALLNM)
+
+uninstall:
+	sudo rm $(INSTALLDIR)/$(INSTALLNM)/$(OUTPUTNM)
+
+dist: $(OUTPUTNM)
+	tar -czf $(OUTPUTNM).tar.gz $(OUTPUTNM)
+
+clean:
+	rm $(OUTPUTNM)
