@@ -20,3 +20,4 @@ dist/build-env-cmds
 Build
 _build/
 blib/
+bibtest/
