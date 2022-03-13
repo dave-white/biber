@@ -15,6 +15,7 @@ use Biber::DataList;
 use Biber::DataModel;
 use Biber::Constants;
 use Biber::Internals;
+use Biber::Input;
 use Biber::Entries;
 use Biber::Entry;
 use Biber::Entry::Names;
@@ -4543,6 +4544,7 @@ sub fetch_data {
       }
     }
     my $package = 'Biber::Input::' . $type . '::' . $datatype;
+    my $input = Biber::Input->new($type, $datatype);
     unless(eval "require $package") {
 
       my ($vol, $dir, undef) = File::Spec->splitpath( $INC{"Biber.pm"} );
@@ -4576,7 +4578,7 @@ sub fetch_data {
       $logger->info("Looking for $datatype $type '$name' for section $secnum");
     }
 
-    @remaining_keys = "${package}::extract_entries"->(locate_data_file($name), $encoding, \@remaining_keys);
+    @remaining_keys = $input->extract_entries(locate_data_file($name), $encoding, \@remaining_keys);
   }
 
   # error reporting
@@ -4742,10 +4744,11 @@ sub get_dependents {
         my $name = $datasource->{name};
         my $encoding = $datasource->{encoding};
         my $datatype = $datasource->{datatype};
-        my $package = 'Biber::Input::' . $type . '::' . $datatype;
-        eval "require $package" or
-          biber_error("Error loading data source package '$package': $@");
-        $missing->@* = "${package}::extract_entries"->(locate_data_file($name), $encoding, $missing);
+        # my $package = 'Biber::Input::' . $type . '::' . $datatype;
+        my $input = Biber::Input->new($type, $datatype);
+        # eval "require $package" or
+        #   biber_error("Error loading data source package '$package': $@");
+        $missing->@* = $input->extract_entries->(locate_data_file($name), $encoding, $missing);
       }
     }
 

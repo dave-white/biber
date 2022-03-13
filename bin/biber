@@ -20,6 +20,7 @@ use Encode;
 use File::Spec;
 use Pod::Usage;
 use List::AllUtils qw( first );
+use Biber::Output;
 
 use Getopt::Long qw/:config no_ignore_case/;
 my $opts = {};
@@ -380,12 +381,14 @@ if (my $outdir = Biber::Config->getoption('output_directory')) {
 }
 
 # Set the output class. Should be a subclass of Biber::Output::base
-my $package = 'Biber::Output::' . Biber::Config->getoption('output_format');
-eval "require $package" or biber_error("Error loading data source package '$package': $@");
-$biber->set_output_obj(eval "${package}->new()");
+my $outp_type = Biber::Config->getoption('output_format');
+# eval "require $package" or biber_error("Error loading data source package '$package': $@");
+# $biber->set_output_obj(eval "${package}->new()");
+my $biberoutput = new Biber::Output($outp_type);
+$biber->set_output_obj($biberoutput);
 
 # Get reference to output object
-my $biberoutput = $biber->get_output_obj;
+# my $biberoutput = $biber->get_output_obj;
 
 # Set the output filename and get ref to output object This has to come
 # before .bcf parsing so that we can detect .bcf parsing errors

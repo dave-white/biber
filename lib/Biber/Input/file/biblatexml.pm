@@ -68,6 +68,20 @@ my $handlers = {
                           }
 };
 
+sub new {
+  my $class = shift;
+  my $obj = shift;
+  my $self;
+  if (defined($obj) and ref($obj) eq 'HASH') {
+    $self = bless $obj, $class;
+  }
+  else {
+    $self = bless {}, $class;
+  }
+
+  return $self;
+}
+
 =head2 extract_entries
 
    Main data extraction routine.

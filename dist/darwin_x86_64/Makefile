@@ -24,7 +24,6 @@ $(OUTPUTNM): $(BINPERL)/biber
 	sudo cp $< /tmp/biber-darwin
 	@echo "Running PAR::Packer pp to package $(BINPERL)/biber into $(OUTPUTNM)."
 	@PAR_VERBATIM=1 $(BINPERL)/pp \
-		--module=Biber::Output::bbl \
 		--module=Biber::Input::file::bibtex \
 		--addfile="../../lib/Biber/LaTeX/recode_data.xml;lib/Biber/LaTeX/recode_data.xml" \
 		--addfile="../../data/schemata/bcf.rng;lib/Biber/bcf.rng" \
